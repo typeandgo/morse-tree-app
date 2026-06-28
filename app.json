@@ -1,17 +1,24 @@
 {
   "expo": {
-    "name": "morse-tree-app",
+    "name": "Morse Tree",
     "slug": "morse-tree-app",
     "version": "1.0.0",
+    "scheme": "morsetree",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#132529",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.enginozturk.morsetree",
+      "infoPlist": {
+        "UIBackgroundModes": []
+      }
     },
     "android": {
+      "package": "com.enginozturk.morsetree",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#132529",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -20,6 +27,15 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-audio",
+      "expo-splash-screen"
+    ],
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }
