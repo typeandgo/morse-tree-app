@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
   back: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 5,
     minHeight: 44,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -37,11 +37,11 @@ const styles = StyleSheet.create({
     color: THEME.gold,
     fontSize: 20,
     lineHeight: 20,
-    top: -3,
+    top: -4,
   },
   label: {
     color: THEME.gold,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "500",
     letterSpacing: 0.5,
   },

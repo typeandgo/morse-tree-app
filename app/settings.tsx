@@ -59,6 +59,7 @@ export default function SettingsScreen() {
   return (
     <View style={[styles.page, { paddingTop: insets.top }]}>
       <Header />
+
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
@@ -75,6 +76,7 @@ export default function SettingsScreen() {
               <Text style={styles.wpmValue}>{settings.wpm}</Text>
               <Text style={styles.wpmUnit}>{t("settings.wpm.unit")}</Text>
             </View>
+
             <Slider
               style={styles.slider}
               minimumValue={WPM_MIN}
@@ -122,6 +124,7 @@ export default function SettingsScreen() {
 
           <View style={styles.toggleRow}>
             <Text style={styles.toggleLabel}>{t("settings.sound.enabled")}</Text>
+            
             <Switch
               value={audioSettings.enabled}
               onValueChange={(v) => updateAudioSettings({ enabled: v })}
@@ -134,6 +137,7 @@ export default function SettingsScreen() {
             <TouchableOpacity style={styles.previewBtn} onPress={() => void preview("dot")}>
               <Text style={styles.previewBtnText}>{t("settings.sound.previewDot", { dot })}</Text>
             </TouchableOpacity>
+
             <TouchableOpacity style={styles.previewBtn} onPress={() => void preview("dash")}>
               <Text style={styles.previewBtnText}>{t("settings.sound.previewDash", { dash })}</Text>
             </TouchableOpacity>
@@ -258,11 +262,13 @@ function SliderRow({
             maximumTrackTintColor="rgba(235,211,156,0.3)"
             thumbTintColor={THEME.activeColor}
           />
+
           <View style={styles.sliderMeta}>
             <Text style={styles.sliderMetaText}>{unitMin}</Text>
             <Text style={styles.sliderCurrent}>{displayValue}</Text>
             <Text style={styles.sliderMetaText}>{unitMax}</Text>
           </View>
+
           <TouchableOpacity style={styles.tryBtn} onPress={onTry}>
             <Text style={styles.tryBtnText}>{"▶ "}{t("common.try")}</Text>
           </TouchableOpacity>
@@ -303,7 +309,7 @@ const styles = StyleSheet.create({
     marginBottom: 22,
   },
   heading: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "600",
     letterSpacing: 2,
     textTransform: "uppercase",
@@ -350,12 +356,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   sliderMetaText: {
-    fontSize: 11,
+    fontSize: 14,
     color: THEME.gold,
     opacity: 0.8,
   },
   sliderCurrent: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "600",
     color: THEME.activeColor,
   },
@@ -375,13 +381,13 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.1)",
   },
   derivedLabel: {
-    fontSize: 12,
+    fontSize: 14,
     color: THEME.gold,
     opacity: 0.75,
     letterSpacing: 0.5,
   },
   derivedValue: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "600",
     color: THEME.gold,
   },
@@ -398,7 +404,7 @@ const styles = StyleSheet.create({
   },
   resetBtnText: {
     color: THEME.gold,
-    fontSize: 12,
+    fontSize: 14,
     letterSpacing: 1,
   },
   toggleRow: {
@@ -414,7 +420,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.15)",
   },
   toggleLabel: {
-    fontSize: 13,
+    fontSize: 14,
     color: THEME.gold,
   },
   previewRow: {
@@ -436,7 +442,7 @@ const styles = StyleSheet.create({
   },
   previewBtnText: {
     color: THEME.gold,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "600",
     letterSpacing: 0.5,
   },
@@ -462,7 +468,7 @@ const styles = StyleSheet.create({
   },
   waveBtnText: {
     color: THEME.gold,
-    fontSize: 13,
+    fontSize: 14,
   },
   waveBtnTextActive: {
     color: THEME.activeColor,
@@ -489,12 +495,12 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     color: THEME.gold,
-    fontSize: 13,
+    fontSize: 14,
     opacity: 0.9,
   },
   rowValue: {
     color: THEME.gold,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "600",
   },
   sliderPanel: {
@@ -518,6 +524,6 @@ const styles = StyleSheet.create({
   },
   tryBtnText: {
     color: THEME.gold,
-    fontSize: 12,
+    fontSize: 14,
   },
 });

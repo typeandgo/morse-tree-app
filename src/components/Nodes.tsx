@@ -143,8 +143,8 @@ const styles = StyleSheet.create({
   },
   label: {
     position: "absolute",
-    top: -8,
-    right: -6,
+    top: -10,
+    right: -8,
     color: THEME.gold,
     fontWeight: "500",
     fontSize: 16,
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   labelFinal: {
     color: THEME.activeColor,
     opacity: 1,
-    transform: [{ scale: 1.5 }],
+    transform: [{ scale: 1.6 }],
     textShadowColor: THEME.activeColor,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,

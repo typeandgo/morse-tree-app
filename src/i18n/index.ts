@@ -47,5 +47,5 @@ export function translate(
 }
 
 export function getLocaleLabel(locale: Locale): string {
-  return locale === "tr" ? "Türkçe" : "English";
+  return locale === "tr" ? "TR" : "EN";
 }

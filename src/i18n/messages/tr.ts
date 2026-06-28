@@ -40,7 +40,7 @@ export const tr: Messages = {
     speedTitle: "Hız",
     soundTitle: "Ses",
     resetTiming: "Hızı varsayılana sıfırla",
-    resetSound: "Ses varsayılanları",
+    resetSound: "Sesi varsayılanlara sıfırla",
     wpm: {
       label: "Hız (WPM)",
       unit: "WPM",

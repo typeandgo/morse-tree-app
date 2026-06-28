@@ -42,13 +42,10 @@ export default function KeyButton() {
 const styles = StyleSheet.create({
   keyButton: {
     position: "absolute",
-    bottom: 24,
+    bottom: 20,
     left: "50%",
-    marginLeft: -10,
-    transform: [{ translateX: -31 }],
+    transform: [{ translateX: -36 }],
     alignItems: "center",
-    padding: 0,
-    backgroundColor: "transparent",
   },
   disabled: {
     opacity: 0.5,
@@ -58,12 +55,13 @@ const styles = StyleSheet.create({
     height: 72,
     alignItems: "center",
     justifyContent: "center",
+    transform: [{ rotate: "-90deg" }],
   },
   centerDot: {
-    width: 18,
-    height: 18,
+    width: 15,
+    height: 15,
     backgroundColor: THEME.gold,
-    borderRadius: 9,
+    borderRadius: 7.5,
     zIndex: 2,
   },
   waveInner: {
@@ -78,9 +76,9 @@ const styles = StyleSheet.create({
   },
   waveOuter: {
     position: "absolute",
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     borderWidth: 3,
     borderColor: "transparent",
     borderTopColor: THEME.gold,

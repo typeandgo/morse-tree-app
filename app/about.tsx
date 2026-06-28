@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     marginBottom: 22,
   },
   heading: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "600",
     letterSpacing: 2,
     textTransform: "uppercase",
@@ -109,20 +109,20 @@ const styles = StyleSheet.create({
   },
   bullet: {
     color: THEME.gold,
-    fontSize: 13,
+    fontSize: 14,
     opacity: 0.9,
     marginTop: 1,
   },
   listText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 14,
     lineHeight: 22,
     color: THEME.gold,
     opacity: 0.9,
   },
   text: {
-    fontSize: 13,
-    lineHeight: 21,
+    fontSize: 14,
+    lineHeight: 22,
     color: THEME.gold,
     opacity: 0.9,
   },

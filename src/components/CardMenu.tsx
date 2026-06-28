@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   },
   itemText: {
     color: THEME.gold,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "500",
     letterSpacing: 1,
   },
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   },
   langBtnText: {
     color: THEME.gold,
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: "500",
   },
   langBtnTextActive: {

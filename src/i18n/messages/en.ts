@@ -40,7 +40,7 @@ export const en: Messages = {
     speedTitle: "Speed",
     soundTitle: "Sound",
     resetTiming: "Reset speed to default",
-    resetSound: "Reset sound defaults",
+    resetSound: "Reset sound to defaults",
     wpm: {
       label: "Speed (WPM)",
       unit: "WPM",
