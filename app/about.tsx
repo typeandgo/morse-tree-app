@@ -21,7 +21,7 @@ export default function AboutScreen() {
   const dashMin = getDashMin(settings);
   const dashMax = getDashMax(settings);
   const durationBetweenQueue = getDurationBetweenQueue(settings);
-  const durationEndOfQueue = getDurationEndOfQueue(settings);
+  const durationEndOfQueue = getDurationEndOfQueue();
   const push = t("common.push");
   const dot = t("common.dot");
   const dash = t("common.dash");

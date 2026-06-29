@@ -54,15 +54,8 @@ export const tr: Messages = {
       cooldown: "Bekleme süresi",
     },
     sound: {
-      enabled: "Ses açık",
       previewDot: "{dot} dinle",
       previewDash: "{dash} dinle",
-      waveSquare: "Kare",
-      waveSine: "Sinüs",
-      volume: {
-        label: "Ses seviyesi",
-        format: "{value}%",
-      },
       frequencyHz: {
         label: "Ton frekansı",
         format: "{value} Hz",

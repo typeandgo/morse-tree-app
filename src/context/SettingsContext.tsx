@@ -15,6 +15,7 @@ import {
   parseStoredAudioSettings,
   type MorseAudioSettings,
 } from "@/lib/morse-audio-settings";
+import { prepareAudio } from "@/lib/morse-audio";
 import {
   DEFAULT_MORSE_SETTINGS,
   normalizeMorseSettings,
@@ -50,7 +51,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       }
       if (rawAudio) {
         const parsed = parseStoredAudioSettings(rawAudio);
-        if (parsed) setAudioSettings(parsed);
+        if (parsed) {
+          setAudioSettings(parsed);
+          void prepareAudio(parsed);
+        } else {
+          void prepareAudio(DEFAULT_MORSE_AUDIO_SETTINGS);
+        }
+      } else {
+        void prepareAudio(DEFAULT_MORSE_AUDIO_SETTINGS);
       }
       setLoaded(true);
     });
@@ -68,6 +76,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setAudioSettings((prev) => {
       const next = normalizeMorseAudioSettings({ ...prev, ...partial });
       void AsyncStorage.setItem(AUDIO_SETTINGS_STORAGE_KEY, JSON.stringify(next));
+      if (next.frequencyHz !== prev.frequencyHz) {
+        void prepareAudio(next);
+      }
       return next;
     });
   }, []);
@@ -80,6 +91,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const resetAudioSettings = useCallback(() => {
     setAudioSettings(DEFAULT_MORSE_AUDIO_SETTINGS);
     void AsyncStorage.setItem(AUDIO_SETTINGS_STORAGE_KEY, JSON.stringify(DEFAULT_MORSE_AUDIO_SETTINGS));
+    void prepareAudio(DEFAULT_MORSE_AUDIO_SETTINGS);
   }, []);
 
   const value = useMemo(

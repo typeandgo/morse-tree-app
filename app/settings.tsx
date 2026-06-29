@@ -3,7 +3,6 @@ import { useState } from "react";
 import {
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TouchableOpacity,
   View,
@@ -12,8 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Header from "@/components/Header";
 import { useLocale } from "@/context/LocaleContext";
 import { useSettings } from "@/context/SettingsContext";
-import { playDashSound, playDotSound, resumeMorseAudio } from "@/lib/morse-audio";
-import { type MorseWaveform } from "@/lib/morse-audio-settings";
+import { playDashSound, playDotSound } from "@/lib/morse-audio";
 import {
   WPM_MIN,
   WPM_MAX,
@@ -45,12 +43,11 @@ export default function SettingsScreen() {
   const dashMin = getDashMin(settings);
   const dashMax = getDashMax(settings);
   const betweenQueue = getDurationBetweenQueue(settings);
-  const endOfQueue = getDurationEndOfQueue(settings);
+  const endOfQueue = getDurationEndOfQueue();
 
-  const preview = async (type: "dot" | "dash") => {
-    await resumeMorseAudio();
-    if (type === "dot") await playDotSound(audioSettings);
-    else await playDashSound(audioSettings);
+  const preview = (type: "dot" | "dash") => {
+    if (type === "dot") void playDotSound(audioSettings);
+    else void playDashSound(audioSettings);
   };
 
   const dot = t("common.dot");
@@ -122,17 +119,6 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.heading}>{t("settings.soundTitle")}</Text>
 
-          <View style={styles.toggleRow}>
-            <Text style={styles.toggleLabel}>{t("settings.sound.enabled")}</Text>
-            
-            <Switch
-              value={audioSettings.enabled}
-              onValueChange={(v) => updateAudioSettings({ enabled: v })}
-              trackColor={{ false: "rgba(235,211,156,0.2)", true: THEME.activeColor }}
-              thumbColor={audioSettings.enabled ? "#fff" : "#ccc"}
-            />
-          </View>
-
           <View style={styles.previewRow}>
             <TouchableOpacity style={styles.previewBtn} onPress={() => void preview("dot")}>
               <Text style={styles.previewBtnText}>{t("settings.sound.previewDot", { dot })}</Text>
@@ -142,41 +128,6 @@ export default function SettingsScreen() {
               <Text style={styles.previewBtnText}>{t("settings.sound.previewDash", { dash })}</Text>
             </TouchableOpacity>
           </View>
-
-          <View style={styles.waveRow}>
-            {(["sine", "square"] as MorseWaveform[]).map((wave) => (
-              <TouchableOpacity
-                key={wave}
-                style={[styles.waveBtn, audioSettings.waveform === wave && styles.waveBtnActive]}
-                onPress={() => {
-                  updateAudioSettings({ waveform: wave });
-                  void resumeMorseAudio().then(() => playDotSound({ ...audioSettings, waveform: wave }));
-                }}
-              >
-                <Text
-                  style={[styles.waveBtnText, audioSettings.waveform === wave && styles.waveBtnTextActive]}
-                >
-                  {wave === "sine" ? t("settings.sound.waveSine") : t("settings.sound.waveSquare")}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <SliderRow
-            label={t("settings.sound.volume.label")}
-            value={audioSettings.volume}
-            displayValue={t("settings.sound.volume.format", { value: Math.round(audioSettings.volume * 100) })}
-            min={0.05}
-            max={0.5}
-            step={0.01}
-            unitMin="5%"
-            unitMax="50%"
-            rowKey="volume"
-            openKey={openKey}
-            onOpenKeyChange={setOpenKey}
-            onChange={(v) => updateAudioSettings({ volume: v })}
-            onTry={() => void preview("dot")}
-          />
 
           <SliderRow
             label={t("settings.sound.frequencyHz.label")}
@@ -407,22 +358,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     letterSpacing: 1,
   },
-  toggleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "rgba(229,193,125,0.25)",
-    borderRadius: 10,
-    backgroundColor: "rgba(0,0,0,0.15)",
-  },
-  toggleLabel: {
-    fontSize: 14,
-    color: THEME.gold,
-  },
   previewRow: {
     flexDirection: "row",
     gap: 10,
@@ -445,33 +380,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     letterSpacing: 0.5,
-  },
-  waveRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 16,
-  },
-  waveBtn: {
-    flex: 1,
-    minHeight: 44,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: "rgba(229,193,125,0.25)",
-    borderRadius: 10,
-    backgroundColor: "rgba(0,0,0,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  waveBtnActive: {
-    borderColor: THEME.activeColor,
-    backgroundColor: "rgba(46,213,115,0.1)",
-  },
-  waveBtnText: {
-    color: THEME.gold,
-    fontSize: 14,
-  },
-  waveBtnTextActive: {
-    color: THEME.activeColor,
   },
   rowWrap: {
     marginBottom: 8,

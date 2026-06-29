@@ -1,10 +1,10 @@
+import * as Haptics from "expo-haptics";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { CodeType } from "@/constants/main.constants";
+import { CODE_TYPES, type CodeType } from "@/constants/main.constants";
 import { useSettings } from "@/context/SettingsContext";
 import {
   buildPathSegments,
   findByMorseCode,
-  hasExtensibleMatch,
   segmentsToActiveSets,
   type PathSegment,
 } from "@/lib/morse-mappings";
@@ -184,7 +184,7 @@ export function useMorseGame() {
       setPhaseSafe("cooldown");
       endOfQueueTimerRef.current = setTimeout(() => {
         fullReset();
-      }, getDurationEndOfQueue(settings));
+      }, getDurationEndOfQueue());
     };
 
     if (exactMatch) {
@@ -198,11 +198,10 @@ export function useMorseGame() {
       const segments = buildPathSegments(entry, alphabetKey);
       applyPathImmediate(segments, null);
     }
-
     runCooldown();
   }, [
     applyPathImmediate, clearAnimationTimers, clearBetweenQueueTimer,
-    fullReset, getLastValidMatch, getMatchForQueue, setPhaseSafe, settings,
+    fullReset, getLastValidMatch, getMatchForQueue, setPhaseSafe,
   ]);
 
   const scheduleQueueCompletion = useCallback(() => {
@@ -222,27 +221,21 @@ export function useMorseGame() {
       syncQueueRef(nextQueue);
       setPhaseSafe("typing");
       void playMorseSymbolSound(symbol, audioSettings);
+      void Haptics.impactAsync(
+        symbol === CODE_TYPES.DOT
+          ? Haptics.ImpactFeedbackStyle.Light
+          : Haptics.ImpactFeedbackStyle.Medium,
+      );
 
       const match = getMatchForQueue(nextQueue);
       if (match) {
         const segments = buildPathSegments(match.entry, match.alphabetKey);
-        const lastSegment = segments[segments.length - 1];
-        const finalId = lastSegment?.type === "node" ? lastSegment.nodeId : null;
-        const code = nextQueue.map(symbolToChar).join("");
-        const isLeaf = !hasExtensibleMatch(code);
-
-        if (isLeaf) {
-          animatePathIncremental(segments, { withFinal: finalId, onComplete: completeQueue });
-        } else {
-          animatePathIncremental(segments, { withFinal: finalId });
-          scheduleQueueCompletion();
-        }
-      } else {
-        scheduleQueueCompletion();
+        animatePathIncremental(segments, { withFinal: null });
       }
+      scheduleQueueCompletion();
     },
     [
-      animatePathIncremental, completeQueue, getMatchForQueue, isDisabled,
+      animatePathIncremental, getMatchForQueue, isDisabled,
       scheduleQueueCompletion, setPhaseSafe, syncQueueRef, audioSettings,
     ],
   );

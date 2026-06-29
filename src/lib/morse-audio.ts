@@ -11,15 +11,25 @@ import {
 } from "@/lib/morse-audio-settings";
 
 const SAMPLE_RATE = 44100;
-let audioModeReady = false;
+const AUDIO_VOLUME = 0.22;
+
+// Promise-lock: all concurrent callers await the same in-flight init,
+// preventing duplicate setAudioModeAsync calls that can silently drop
+// playback on iOS when two calls race at startup.
+let audioModePromise: Promise<void> | null = null;
 
 async function ensureAudioMode(): Promise<void> {
-  if (audioModeReady) return;
-  await setAudioModeAsync({
-    playsInSilentMode: true,
-    shouldPlayInBackground: false,
-  });
-  audioModeReady = true;
+  if (!audioModePromise) {
+    audioModePromise = setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: false,
+    }).catch((err: unknown) => {
+      // Reset so the next caller can retry.
+      audioModePromise = null;
+      throw err;
+    });
+  }
+  await audioModePromise;
 }
 
 function writeStr(view: DataView, offset: number, str: string): void {
@@ -31,10 +41,8 @@ function writeStr(view: DataView, offset: number, str: string): void {
 function generateWavBytes(opts: {
   frequencyHz: number;
   durationMs: number;
-  volume: number;
-  waveform: "sine" | "square";
 }): Uint8Array {
-  const { frequencyHz, durationMs, volume, waveform } = opts;
+  const { frequencyHz, durationMs } = opts;
   const numSamples = Math.ceil((SAMPLE_RATE * durationMs) / 1000);
   const attackSamples = Math.ceil((SAMPLE_RATE * AUDIO_ATTACK_MS) / 1000);
   const releaseSamples = Math.ceil((SAMPLE_RATE * AUDIO_RELEASE_MS) / 1000);
@@ -48,8 +56,8 @@ function generateWavBytes(opts: {
   writeStr(view, 8, "WAVE");
   writeStr(view, 12, "fmt ");
   view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);   // PCM
-  view.setUint16(22, 1, true);   // mono
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
   view.setUint32(24, SAMPLE_RATE, true);
   view.setUint32(28, SAMPLE_RATE * 2, true);
   view.setUint16(32, 2, true);
@@ -57,7 +65,7 @@ function generateWavBytes(opts: {
   writeStr(view, 36, "data");
   view.setUint32(40, dataSize, true);
 
-  const maxAmplitude = 32767 * volume;
+  const maxAmplitude = 32767 * AUDIO_VOLUME;
   const phaseInc = (2 * Math.PI * frequencyHz) / SAMPLE_RATE;
 
   for (let i = 0; i < numSamples; i++) {
@@ -67,27 +75,21 @@ function generateWavBytes(opts: {
     } else if (i > numSamples - releaseSamples) {
       envelope = (numSamples - i) / releaseSamples;
     }
-
-    const wave =
-      waveform === "square"
-        ? Math.sin(i * phaseInc) >= 0 ? 1 : -1
-        : Math.sin(i * phaseInc);
-
+    const wave = Math.sin(i * phaseInc);
     view.setInt16(headerSize + i * 2, Math.round(wave * envelope * maxAmplitude), true);
   }
 
   return new Uint8Array(buf);
 }
 
+// URI cache: ensures each (frequencyHz, durationMs) pair is only written to disk once.
 const uriCache = new Map<string, string>();
 
 function getOrCreateToneUri(opts: {
   frequencyHz: number;
   durationMs: number;
-  volume: number;
-  waveform: "sine" | "square";
 }): string {
-  const key = `${opts.frequencyHz}_${opts.durationMs}_${Math.round(opts.volume * 100)}_${opts.waveform}`;
+  const key = `${opts.frequencyHz}_${opts.durationMs}`;
   const cached = uriCache.get(key);
   if (cached) return cached;
 
@@ -101,50 +103,61 @@ function getOrCreateToneUri(opts: {
   return file.uri;
 }
 
+/**
+ * Call at app startup and whenever audioSettings change.
+ * Warms up the audio session and pre-generates dot + dash WAV files
+ * so subsequent playback has no I/O or session-init latency.
+ */
+export async function prepareAudio(audio: MorseAudioSettings): Promise<void> {
+  await ensureAudioMode();
+  getOrCreateToneUri({ frequencyHz: audio.frequencyHz, durationMs: AUDIO_UNIT_MS });
+  getOrCreateToneUri({ frequencyHz: audio.frequencyHz, durationMs: AUDIO_UNIT_MS * AUDIO_DASH_RATIO });
+}
+
 async function playTone(opts: {
   frequencyHz: number;
   durationMs: number;
-  volume: number;
-  waveform: "sine" | "square";
 }): Promise<void> {
-  await ensureAudioMode();
-  const uri = getOrCreateToneUri(opts);
-  const player = createAudioPlayer(uri);
-  player.play();
-  const sub = player.addListener("playbackStatusUpdate", (status) => {
-    if (status.didJustFinish) {
+  try {
+    await ensureAudioMode();
+    const uri = getOrCreateToneUri(opts);
+    const player = createAudioPlayer(uri);
+
+    // Guard: if didJustFinish never fires (playback error or interruption),
+    // clean up after a deadline so players don't accumulate.
+    const guardMs = opts.durationMs + 1500;
+    let cleaned = false;
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      clearTimeout(guard);
       sub.remove();
       player.remove();
-    }
-  });
-}
+    };
+    const guard = setTimeout(cleanup, guardMs);
 
-export async function resumeMorseAudio(): Promise<void> {
-  await ensureAudioMode();
+    // Register listener before play() to avoid missing didJustFinish on
+    // very short tones where completion could race listener registration.
+    const sub = player.addListener("playbackStatusUpdate", (status) => {
+      if (status.didJustFinish) cleanup();
+    });
+
+    player.play();
+  } catch {
+    // Audio is non-critical; swallow to avoid unhandled rejection noise.
+  }
 }
 
 export async function playDotSound(
   audio: MorseAudioSettings = DEFAULT_MORSE_AUDIO_SETTINGS,
 ): Promise<void> {
-  if (!audio.enabled) return;
-  await playTone({
-    frequencyHz: audio.frequencyHz,
-    durationMs: AUDIO_UNIT_MS,
-    volume: audio.volume,
-    waveform: audio.waveform,
-  });
+  await playTone({ frequencyHz: audio.frequencyHz, durationMs: AUDIO_UNIT_MS });
 }
 
 export async function playDashSound(
   audio: MorseAudioSettings = DEFAULT_MORSE_AUDIO_SETTINGS,
 ): Promise<void> {
-  if (!audio.enabled) return;
-  await playTone({
-    frequencyHz: audio.frequencyHz,
-    durationMs: AUDIO_UNIT_MS * AUDIO_DASH_RATIO,
-    volume: audio.volume,
-    waveform: audio.waveform,
-  });
+  await playTone({ frequencyHz: audio.frequencyHz, durationMs: AUDIO_UNIT_MS * AUDIO_DASH_RATIO });
 }
 
 export async function playMorseSymbolSound(

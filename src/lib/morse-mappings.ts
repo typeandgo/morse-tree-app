@@ -4,7 +4,7 @@ import {
   type AlphabetKey,
 } from "@/constants/main.constants";
 
-export const KEY_TO_NODE_ID: Record<string, string> = {
+const KEY_TO_NODE_ID: Record<string, string> = {
   key0: "key0",
   keyA: "p-A", keyB: "p-B", keyC: "p-C", keyD: "p-D", keyE: "p-E",
   keyF: "p-F", keyG: "p-G", keyH: "p-H", keyI: "p-I", keyJ: "p-J",
@@ -14,34 +14,18 @@ export const KEY_TO_NODE_ID: Record<string, string> = {
   keyZ: "p-Z",
 };
 
-export const ALL_LINE_IDS = [
-  "l0T", "lTM", "lMO", "l0E", "lEI", "lIS", "lSH",
-  "lGQ", "lNK", "lKY", "lDX", "lAR", "lRL", "lWP",
-  "lTN", "lND", "lDB", "lMG", "lGZ", "lKC",
-  "lEA", "lAW", "lWJ", "lIU", "lUF", "lSV",
-];
-
-export function hasExtensibleMatch(code: string): boolean {
-  for (const key of Object.keys(ALHPABET) as AlphabetKey[]) {
-    const entry = ALHPABET[key];
-    if (entry.morseCode !== code && entry.morseCode.startsWith(code)) {
-      return true;
-    }
-  }
-  return false;
-}
+const MORSE_CODE_MAP = new Map<string, { entry: AlphabetEntry; alphabetKey: AlphabetKey }>(
+  (Object.keys(ALHPABET) as AlphabetKey[]).map((alphabetKey) => [
+    ALHPABET[alphabetKey].morseCode,
+    { entry: ALHPABET[alphabetKey], alphabetKey },
+  ]),
+);
 
 export function findByMorseCode(code: string): {
   entry: AlphabetEntry;
   alphabetKey: AlphabetKey;
 } | null {
-  for (const alphabetKey of Object.keys(ALHPABET) as AlphabetKey[]) {
-    const entry = ALHPABET[alphabetKey];
-    if (entry.morseCode === code) {
-      return { entry, alphabetKey };
-    }
-  }
-  return null;
+  return MORSE_CODE_MAP.get(code) ?? null;
 }
 
 export type PathSegment =

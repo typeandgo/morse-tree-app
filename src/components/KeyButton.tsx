@@ -1,4 +1,3 @@
-import * as Haptics from "expo-haptics";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useMorseGameContext } from "@/context/MorseGameContext";
 import { useLocale } from "@/context/LocaleContext";
@@ -11,7 +10,6 @@ export default function KeyButton() {
 
   const handlePressIn = () => {
     if (isDisabled) return;
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onPressStart();
   };
 

@@ -1,6 +1,6 @@
 export const WPM_MIN = 1;
-export const WPM_MAX = 40;
-export const WPM_DEFAULT = 5;
+export const WPM_MAX = 25;
+export const WPM_DEFAULT = 10;
 export const WPM_STEP = 1;
 
 export type MorseSettings = {
@@ -18,7 +18,7 @@ export function getUnitMs(settings: MorseSettings): number {
 }
 
 export function getDotMax(settings: MorseSettings): number {
-  return Math.round(getUnitMs(settings) * 2);
+  return getUnitMs(settings);
 }
 
 export function getDashMin(settings: MorseSettings): number {
@@ -26,15 +26,15 @@ export function getDashMin(settings: MorseSettings): number {
 }
 
 export function getDashMax(settings: MorseSettings): number {
-  return Math.round(getUnitMs(settings) * 6);
+  return getDotMax(settings) * 3 + 1;
 }
 
 export function getDurationBetweenQueue(settings: MorseSettings): number {
   return Math.round(getUnitMs(settings) * 7);
 }
 
-export function getDurationEndOfQueue(settings: MorseSettings): number {
-  return Math.round(getUnitMs(settings) * 5);
+export function getDurationEndOfQueue(): number {
+  return 500;
 }
 
 export function getPathStepMs(settings: MorseSettings): number {

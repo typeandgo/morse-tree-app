@@ -54,15 +54,8 @@ export const en: Messages = {
       cooldown: "Cooldown",
     },
     sound: {
-      enabled: "Sound on",
       previewDot: "Preview {dot}",
       previewDash: "Preview {dash}",
-      waveSquare: "Square",
-      waveSine: "Sine",
-      volume: {
-        label: "Volume",
-        format: "{value}%",
-      },
       frequencyHz: {
         label: "Tone frequency",
         format: "{value} Hz",

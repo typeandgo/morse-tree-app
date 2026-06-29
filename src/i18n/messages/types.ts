@@ -52,15 +52,8 @@ export type Messages = {
       cooldown: string;
     };
     sound: {
-      enabled: string;
       previewDot: string;
       previewDash: string;
-      waveSquare: string;
-      waveSine: string;
-      volume: {
-        label: string;
-        format: string;
-      };
       frequencyHz: {
         label: string;
         format: string;
