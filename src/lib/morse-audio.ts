@@ -12,6 +12,8 @@ import {
 
 const SAMPLE_RATE = 44100;
 const AUDIO_VOLUME = 0.22;
+// Long enough to cover any press at minimum WPM (WPM=1 → dash ≈ 3600ms)
+const PRESS_TONE_DURATION_MS = 5000;
 
 // Promise-lock: all concurrent callers await the same in-flight init,
 // preventing duplicate setAudioModeAsync calls that can silently drop
@@ -112,6 +114,27 @@ export async function prepareAudio(audio: MorseAudioSettings): Promise<void> {
   await ensureAudioMode();
   getOrCreateToneUri({ frequencyHz: audio.frequencyHz, durationMs: AUDIO_UNIT_MS });
   getOrCreateToneUri({ frequencyHz: audio.frequencyHz, durationMs: AUDIO_UNIT_MS * AUDIO_DASH_RATIO });
+  getOrCreateToneUri({ frequencyHz: audio.frequencyHz, durationMs: PRESS_TONE_DURATION_MS });
+}
+
+let activePressPlayer: ReturnType<typeof createAudioPlayer> | null = null;
+
+export function startPressTone(
+  audio: MorseAudioSettings = DEFAULT_MORSE_AUDIO_SETTINGS,
+): void {
+  stopPressTone();
+  const uri = getOrCreateToneUri({ frequencyHz: audio.frequencyHz, durationMs: PRESS_TONE_DURATION_MS });
+  const player = createAudioPlayer(uri);
+  activePressPlayer = player;
+  player.play();
+}
+
+export function stopPressTone(): void {
+  if (!activePressPlayer) return;
+  const player = activePressPlayer;
+  activePressPlayer = null;
+  player.pause();
+  player.remove();
 }
 
 async function playTone(opts: {

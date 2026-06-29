@@ -22,7 +22,6 @@ export default function KeyButton() {
       style={[styles.keyButton, isDisabled && styles.disabled]}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      disabled={isDisabled}
       accessibilityLabel={pushLabel}
       accessibilityRole="button"
     >

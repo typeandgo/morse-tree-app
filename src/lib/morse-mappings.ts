@@ -14,6 +14,14 @@ const KEY_TO_NODE_ID: Record<string, string> = {
   keyZ: "p-Z",
 };
 
+const INTERNAL_KEYS = new Set<string>(
+  (Object.values(ALHPABET) as AlphabetEntry[]).flatMap((e) => e.prevKeys),
+);
+
+export function isLeafAlphabetKey(alphabetKey: AlphabetKey): boolean {
+  return !INTERNAL_KEYS.has(alphabetKey);
+}
+
 const MORSE_CODE_MAP = new Map<string, { entry: AlphabetEntry; alphabetKey: AlphabetKey }>(
   (Object.keys(ALHPABET) as AlphabetKey[]).map((alphabetKey) => [
     ALHPABET[alphabetKey].morseCode,

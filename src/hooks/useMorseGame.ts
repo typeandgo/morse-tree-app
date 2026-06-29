@@ -1,14 +1,14 @@
-import * as Haptics from "expo-haptics";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CODE_TYPES, type CodeType } from "@/constants/main.constants";
+import type { CodeType } from "@/constants/main.constants";
 import { useSettings } from "@/context/SettingsContext";
 import {
   buildPathSegments,
   findByMorseCode,
+  isLeafAlphabetKey,
   segmentsToActiveSets,
   type PathSegment,
 } from "@/lib/morse-mappings";
-import { playMorseSymbolSound } from "@/lib/morse-audio";
+import { startPressTone, stopPressTone } from "@/lib/morse-audio";
 import { pressDurationToSymbol, symbolToChar } from "@/lib/morse-timing";
 import {
   getDurationBetweenQueue,
@@ -220,23 +220,23 @@ export function useMorseGame() {
       const nextQueue = [...queueRef.current, symbol];
       syncQueueRef(nextQueue);
       setPhaseSafe("typing");
-      void playMorseSymbolSound(symbol, audioSettings);
-      void Haptics.impactAsync(
-        symbol === CODE_TYPES.DOT
-          ? Haptics.ImpactFeedbackStyle.Light
-          : Haptics.ImpactFeedbackStyle.Medium,
-      );
-
       const match = getMatchForQueue(nextQueue);
       if (match) {
         const segments = buildPathSegments(match.entry, match.alphabetKey);
+        if (isLeafAlphabetKey(match.alphabetKey)) {
+          animatePathIncremental(segments, {
+            withFinal: null,
+            onComplete: () => completeQueue(),
+          });
+          return;
+        }
         animatePathIncremental(segments, { withFinal: null });
       }
       scheduleQueueCompletion();
     },
     [
-      animatePathIncremental, getMatchForQueue, isDisabled,
-      scheduleQueueCompletion, setPhaseSafe, syncQueueRef, audioSettings,
+      animatePathIncremental, completeQueue, getMatchForQueue, isDisabled,
+      scheduleQueueCompletion, setPhaseSafe, syncQueueRef,
     ],
   );
 
@@ -245,13 +245,15 @@ export function useMorseGame() {
       return;
     }
     if (isPressingRef.current) return;
+    startPressTone(audioSettings);
     isPressingRef.current = true;
     pressStartRef.current = Date.now();
-  }, [isDisabled]);
+  }, [audioSettings, isDisabled]);
 
   const onPressEnd = useCallback(() => {
     if (!isPressingRef.current || pressStartRef.current === null) return;
     isPressingRef.current = false;
+    stopPressTone();
 
     if (isDisabled || phaseRef.current === "completing" || phaseRef.current === "cooldown") {
       pressStartRef.current = null;
