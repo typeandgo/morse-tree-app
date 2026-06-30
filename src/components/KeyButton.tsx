@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useMorseGameContext } from "@/context/MorseGameContext";
 import { useLocale } from "@/context/LocaleContext";
@@ -8,14 +9,16 @@ export default function KeyButton() {
   const { isDisabled, onPressStart, onPressEnd } = useMorseGameContext();
   const pushLabel = t("common.push");
 
-  const handlePressIn = () => {
+  // Stable references prevent Pressable from receiving new handler props
+  // mid-gesture, which can cause duplicate native touch events on Android.
+  const handlePressIn = useCallback(() => {
     if (isDisabled) return;
     onPressStart();
-  };
+  }, [isDisabled, onPressStart]);
 
-  const handlePressOut = () => {
+  const handlePressOut = useCallback(() => {
     onPressEnd();
-  };
+  }, [onPressEnd]);
 
   return (
     <Pressable

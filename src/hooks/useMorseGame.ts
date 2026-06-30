@@ -20,6 +20,10 @@ import {
 
 type Phase = "idle" | "typing" | "completing" | "cooldown";
 
+// Ghost touch filter: native touch events shorter than this are discarded.
+// Intentional taps are always longer; ghost touches are typically < 10ms.
+const MIN_PRESS_DURATION_MS = 20;
+
 function segmentsEqual(a: PathSegment, b: PathSegment): boolean {
   if (a.type !== b.type) return false;
   if (a.type === "antenna" && b.type === "antenna") return true;
@@ -259,6 +263,13 @@ export function useMorseGame() {
 
     const elapsed = Date.now() - pressStartRef.current;
     pressStartRef.current = null;
+
+    // Ghost touch: discard sub-threshold presses without registering a symbol.
+    // Real human taps are always longer; ghost touches are typically < 10ms.
+    if (elapsed < MIN_PRESS_DURATION_MS) {
+      stopPressTone(0);
+      return;
+    }
 
     if (isDisabled || phaseRef.current === "completing" || phaseRef.current === "cooldown") {
       stopPressTone(0);
