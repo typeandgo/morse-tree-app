@@ -37,7 +37,7 @@ export function getDashMax(settings: MorseSettings): number {
 }
 
 export function getDurationBetweenQueue(settings: MorseSettings): number {
-  return Math.round(getUnitMs(settings) * 7 * settings.gapMultiplier);
+  return Math.round(getUnitMs(settings) * 3 * settings.gapMultiplier);
 }
 
 export function getDurationEndOfQueue(): number {

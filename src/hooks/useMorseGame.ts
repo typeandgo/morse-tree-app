@@ -275,6 +275,7 @@ export function useMorseGame() {
       return;
     }
     if (isPressingRef.current) return;
+    clearBetweenQueueTimer();
     startPressTone(audioSettings);
     isPressingRef.current = true;
     pressStartRef.current = Date.now();
@@ -284,7 +285,7 @@ export function useMorseGame() {
       dashAutoReleaseTimerRef.current = null;
       triggerPressEnd();
     }, getDashMax(settings));
-  }, [audioSettings, isDisabled, settings, triggerPressEnd]);
+  }, [audioSettings, clearBetweenQueueTimer, isDisabled, settings, triggerPressEnd]);
 
   const onPressEnd = useCallback(() => {
     triggerPressEnd();

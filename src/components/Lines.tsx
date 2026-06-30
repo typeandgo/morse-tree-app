@@ -13,8 +13,8 @@ type LineConfig = {
 
 const LINES: LineConfig[] = [
   // Horizontal lines — extended 2px into each node to eliminate sub-pixel gaps
-  { lineId: "l0T",  top: 115, left: 150, width: 27,  isVertical: false }, // +2 into T right
-  { lineId: "l0E",  top: 115, left: 177, width: 24,  isVertical: false }, // +2 into E left
+  { lineId: "l0T",  top: 115, left: 150, width: 29,  isVertical: false }, // +2 into T right
+  { lineId: "l0E",  top: 115, left: 176, width: 25,  isVertical: false }, // +2 into E left
   { lineId: "lTM",  top: 115, left: 99,  width: 24,  isVertical: false }, // +2 into M/T
   { lineId: "lMO",  top: 115, left: 49,  width: 24,  isVertical: false }, // +2 into O/M
   { lineId: "lEI",  top: 115, left: 219, width: 24,  isVertical: false }, // +2 into E/I (was 0px)
