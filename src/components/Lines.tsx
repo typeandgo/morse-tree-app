@@ -34,11 +34,11 @@ const LINES: LineConfig[] = [
   { lineId: "lMG",  top: 121, left: 85,  height: 37,  isVertical: true },
   { lineId: "lGZ",  top: 174, left: 85,  height: 34,  isVertical: true },
   { lineId: "lKC",  top: 271, left: 85,  height: 37,  isVertical: true },
-  { lineId: "lEA",  top: 124, left: 209, height: 129, isVertical: true },
-  { lineId: "lAW",  top: 279, left: 209, height: 74,  isVertical: true },
-  { lineId: "lWJ",  top: 379, left: 209, height: 24,  isVertical: true },
-  { lineId: "lIU",  top: 124, left: 249, height: 29,  isVertical: true },
-  { lineId: "lUF",  top: 179, left: 249, height: 29,  isVertical: true },
+  { lineId: "lEA",  top: 124, left: 210, height: 129, isVertical: true },
+  { lineId: "lAW",  top: 279, left: 210, height: 74,  isVertical: true },
+  { lineId: "lWJ",  top: 379, left: 210, height: 24,  isVertical: true },
+  { lineId: "lIU",  top: 124, left: 250, height: 29,  isVertical: true },
+  { lineId: "lUF",  top: 179, left: 250, height: 29,  isVertical: true },
   { lineId: "lSV",  top: 124, left: 290, height: 29,  isVertical: true },
 ];
 

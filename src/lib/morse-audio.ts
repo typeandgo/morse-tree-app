@@ -11,7 +11,7 @@ import {
 } from "@/lib/morse-audio-settings";
 
 const SAMPLE_RATE = 44100;
-const AUDIO_VOLUME = 0.22;
+const AUDIO_VOLUME = 1.0;
 // Long enough to cover any press at minimum WPM (WPM=1 → dash ≈ 3600ms)
 const PRESS_TONE_DURATION_MS = 5000;
 
@@ -87,11 +87,13 @@ function generateWavBytes(opts: {
 // URI cache: ensures each (frequencyHz, durationMs) pair is only written to disk once.
 const uriCache = new Map<string, string>();
 
+const AUDIO_VOLUME_TAG = Math.round(AUDIO_VOLUME * 100);
+
 function getOrCreateToneUri(opts: {
   frequencyHz: number;
   durationMs: number;
 }): string {
-  const key = `${opts.frequencyHz}_${opts.durationMs}`;
+  const key = `${opts.frequencyHz}_${opts.durationMs}_v${AUDIO_VOLUME_TAG}`;
   const cached = uriCache.get(key);
   if (cached) return cached;
 
@@ -105,36 +107,65 @@ function getOrCreateToneUri(opts: {
   return file.uri;
 }
 
+// Persistent player kept alive across presses — no init latency on each press.
+let pressTonePlayer: ReturnType<typeof createAudioPlayer> | null = null;
+let pressToneStopTimer: ReturnType<typeof setTimeout> | null = null;
+
 /**
  * Call at app startup and whenever audioSettings change.
- * Warms up the audio session and pre-generates dot + dash WAV files
- * so subsequent playback has no I/O or session-init latency.
+ * Warms up the audio session, pre-generates WAV files, and pre-creates
+ * the press tone player so the first press has zero init latency.
  */
 export async function prepareAudio(audio: MorseAudioSettings): Promise<void> {
   await ensureAudioMode();
   getOrCreateToneUri({ frequencyHz: audio.frequencyHz, durationMs: AUDIO_UNIT_MS });
   getOrCreateToneUri({ frequencyHz: audio.frequencyHz, durationMs: AUDIO_UNIT_MS * AUDIO_DASH_RATIO });
-  getOrCreateToneUri({ frequencyHz: audio.frequencyHz, durationMs: PRESS_TONE_DURATION_MS });
+
+  // Recreate press player whenever audio settings change (e.g. frequency)
+  if (pressTonePlayer) {
+    pressTonePlayer.remove();
+    pressTonePlayer = null;
+  }
+  const pressUri = getOrCreateToneUri({ frequencyHz: audio.frequencyHz, durationMs: PRESS_TONE_DURATION_MS });
+  pressTonePlayer = createAudioPlayer(pressUri);
 }
 
-let activePressPlayer: ReturnType<typeof createAudioPlayer> | null = null;
+function cancelPendingStop(): void {
+  if (pressToneStopTimer) {
+    clearTimeout(pressToneStopTimer);
+    pressToneStopTimer = null;
+  }
+}
+
+function doStopPressTone(): void {
+  if (!pressTonePlayer) return;
+  pressTonePlayer.pause();
+  pressTonePlayer.seekTo(0);
+}
 
 export function startPressTone(
   audio: MorseAudioSettings = DEFAULT_MORSE_AUDIO_SETTINGS,
 ): void {
-  stopPressTone();
-  const uri = getOrCreateToneUri({ frequencyHz: audio.frequencyHz, durationMs: PRESS_TONE_DURATION_MS });
-  const player = createAudioPlayer(uri);
-  activePressPlayer = player;
-  player.play();
+  cancelPendingStop();
+  if (!pressTonePlayer) {
+    // Fallback if prepareAudio hasn't completed yet
+    const uri = getOrCreateToneUri({ frequencyHz: audio.frequencyHz, durationMs: PRESS_TONE_DURATION_MS });
+    pressTonePlayer = createAudioPlayer(uri);
+  }
+  pressTonePlayer.seekTo(0);
+  pressTonePlayer.play();
 }
 
-export function stopPressTone(): void {
-  if (!activePressPlayer) return;
-  const player = activePressPlayer;
-  activePressPlayer = null;
-  player.pause();
-  player.remove();
+export function stopPressTone(delayMs = 0): void {
+  cancelPendingStop();
+  if (delayMs <= 0) {
+    doStopPressTone();
+    return;
+  }
+  pressToneStopTimer = setTimeout(() => {
+    pressToneStopTimer = null;
+    doStopPressTone();
+  }, delayMs);
 }
 
 async function playTone(opts: {

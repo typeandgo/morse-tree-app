@@ -1,4 +1,12 @@
-import { StyleSheet, Text, View } from "react-native";
+import React, { useEffect } from "react";
+import { StyleSheet, View } from "react-native";
+import Animated, {
+  interpolate,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useMorseGameContext } from "@/context/MorseGameContext";
 import { THEME } from "@/constants/theme";
 
@@ -41,71 +49,92 @@ const NODES: NodeConfig[] = [
   { letter: "J", symbol: "dashV", top: 400, left: 195, nodeId: "p-J" },
 ];
 
-function NodeSymbol({ symbol, active }: { symbol: SymbolKind; active: boolean }) {
-  const borderColor = active ? THEME.activeColor : THEME.gold;
-  const bgColor = active ? THEME.activeColor : `${THEME.activeColor}33`;
+const ACTIVE_DURATION = 80;
+const FINAL_DURATION = 150;
 
-  if (symbol === "dot") {
+type NodeItemProps = {
+  node: NodeConfig;
+  active: boolean;
+  isFinal: boolean;
+};
+
+const NodeItem = React.memo(
+  function NodeItem({ node, active, isFinal }: NodeItemProps) {
+    const activeAnim = useSharedValue(active ? 1 : 0);
+    const finalAnim = useSharedValue(isFinal ? 1 : 0);
+
+    useEffect(() => {
+      activeAnim.value = withTiming(active ? 1 : 0, { duration: ACTIVE_DURATION });
+    }, [active, activeAnim]);
+
+    useEffect(() => {
+      finalAnim.value = withTiming(isFinal ? 1 : 0, { duration: FINAL_DURATION });
+    }, [isFinal, finalAnim]);
+
+    const symbolAnimStyle = useAnimatedStyle(() => ({
+      borderColor: interpolateColor(
+        activeAnim.value,
+        [0, 1],
+        [THEME.gold, THEME.activeColor],
+      ),
+      backgroundColor: interpolateColor(
+        activeAnim.value,
+        [0, 1],
+        [`${THEME.activeColor}33`, THEME.activeColor],
+      ),
+      shadowOpacity: interpolate(activeAnim.value, [0, 1], [0, 0.9]),
+      shadowRadius: interpolate(activeAnim.value, [0, 1], [0, 8]),
+    }));
+
+    const labelAnimStyle = useAnimatedStyle(() => ({
+      opacity: interpolate(activeAnim.value, [0, 1], [0.6, 1]),
+      color: interpolateColor(
+        finalAnim.value,
+        [0, 1],
+        [THEME.gold, THEME.activeColor],
+      ),
+      transform: [{ scale: interpolate(finalAnim.value, [0, 1], [1, 1.6]) }],
+      textShadowRadius: interpolate(finalAnim.value, [0, 1], [0, 8]),
+    }));
+
+    const symbolBase =
+      node.symbol === "dot"
+        ? styles.dot
+        : node.symbol === "dashH"
+          ? [styles.dash, styles.dashH]
+          : [styles.dash, styles.dashV];
+
     return (
-      <View
-        style={[
-          styles.dot,
-          { borderColor, backgroundColor: bgColor },
-          active && styles.symbolGlow,
-          active && { shadowColor: THEME.activeColor },
-        ]}
-      />
+      <View style={[styles.node, { top: node.top, left: node.left }]}>
+        <Animated.View
+          style={[
+            symbolBase,
+            styles.symbolShadowBase,
+            symbolAnimStyle,
+          ]}
+        />
+        <Animated.Text style={[styles.label, styles.labelShadowBase, labelAnimStyle]}>
+          {node.letter}
+        </Animated.Text>
+      </View>
     );
-  }
-  if (symbol === "dashH") {
-    return (
-      <View
-        style={[
-          styles.dash, styles.dashH,
-          { borderColor, backgroundColor: bgColor },
-          active && styles.symbolGlow,
-          active && { shadowColor: THEME.activeColor },
-        ]}
-      />
-    );
-  }
-  return (
-    <View
-      style={[
-        styles.dash, styles.dashV,
-        { borderColor, backgroundColor: bgColor },
-        active && styles.symbolGlow,
-        active && { shadowColor: THEME.activeColor },
-      ]}
-    />
-  );
-}
+  },
+  (prev, next) => prev.active === next.active && prev.isFinal === next.isFinal,
+);
 
 export default function Nodes() {
   const { activeNodeIds, finalNodeId } = useMorseGameContext();
 
   return (
     <>
-      {NODES.map((node) => {
-        const active = activeNodeIds.has(node.nodeId);
-        const isFinal = finalNodeId === node.nodeId;
-        return (
-          <View
-            key={node.nodeId}
-            style={[styles.node, { top: node.top, left: node.left }]}
-          >
-            <NodeSymbol symbol={node.symbol} active={active} />
-            <Text
-              style={[
-                styles.label,
-                isFinal && styles.labelFinal,
-              ]}
-            >
-              {node.letter}
-            </Text>
-          </View>
-        );
-      })}
+      {NODES.map((node) => (
+        <NodeItem
+          key={node.nodeId}
+          node={node}
+          active={activeNodeIds.has(node.nodeId)}
+          isFinal={finalNodeId === node.nodeId}
+        />
+      ))}
     </>
   );
 }
@@ -136,26 +165,19 @@ const styles = StyleSheet.create({
     width: 14,
     height: 30,
   },
-  symbolGlow: {
+  symbolShadowBase: {
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 8,
+    shadowColor: THEME.activeColor,
   },
   label: {
     position: "absolute",
     top: -10,
     right: -8,
-    color: THEME.gold,
     fontWeight: "500",
     fontSize: 16,
-    opacity: 0.8,
   },
-  labelFinal: {
-    color: THEME.activeColor,
-    opacity: 1,
-    transform: [{ scale: 1.6 }],
+  labelShadowBase: {
     textShadowColor: THEME.activeColor,
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
   },
 });

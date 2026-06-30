@@ -32,7 +32,8 @@ export const tr: Messages = {
     usageQueueGap: "Basışlar arasında {duration} ms'den fazla boşluk bırakırsanız kuyruk tamamlanır",
     usageCooldown: "Kuyruk tamamlandıktan sonra düğme {duration} ms boyunca devre dışı kalır",
     treeTitle: "Ağaç yapısı",
-    treeText: "Her harf, antenden (kök) başlayan nokta ve çizgi dallarıyla tanımlanır. Doğru morse dizisini girdiğinizde yol boyunca node ve çizgiler yanar; doğru harf kalıcı olarak vurgulanır. Hızı {settings} sayfasından değiştirebilirsiniz; bu sayfadaki değerler her zaman son ayarlarınızı yansıtır.",
+    treeText: "Her harf, antenden (kök) başlayan nokta ve çizgi dallarıyla tanımlanır. Doğru morse dizisini girdiğinizde yol boyunca node ve çizgiler yanar; doğru harf kalıcı olarak vurgulanır.",
+    treeNote: "Hızı {settings} sayfasından değiştirebilirsiniz; bu sayfadaki değerler her zaman son ayarlarınızı yansıtır.",
   },
   settings: {
     title: "Ayarlar",
@@ -52,6 +53,10 @@ export const tr: Messages = {
       dash: "DASH aralığı",
       gap: "Sembol boşluğu",
       cooldown: "Bekleme süresi",
+    },
+    gapMultiplier: {
+      label: "Boşluk Çarpanı",
+      format: "×{value}",
     },
     sound: {
       previewDot: "{dot} dinle",

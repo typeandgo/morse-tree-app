@@ -16,6 +16,9 @@ import {
   WPM_MIN,
   WPM_MAX,
   WPM_STEP,
+  GAP_MULTIPLIER_MIN,
+  GAP_MULTIPLIER_MAX,
+  GAP_MULTIPLIER_STEP,
   getUnitMs,
   getDotMax,
   getDashMin,
@@ -92,6 +95,22 @@ export default function SettingsScreen() {
             </View>
           </View>
 
+          <SliderRow
+            label={t("settings.gapMultiplier.label")}
+            value={settings.gapMultiplier}
+            displayValue={t("settings.gapMultiplier.format", { value: settings.gapMultiplier.toFixed(1) })}
+            min={GAP_MULTIPLIER_MIN}
+            max={GAP_MULTIPLIER_MAX}
+            step={GAP_MULTIPLIER_STEP}
+            unitMin={`×${GAP_MULTIPLIER_MIN.toFixed(1)}`}
+            unitMax={`×${GAP_MULTIPLIER_MAX.toFixed(1)}`}
+            rowKey="gapMultiplier"
+            keyGroup="timing"
+            openKey={openKey}
+            onOpenKeyChange={setOpenKey}
+            onChange={(v) => updateSettings({ gapMultiplier: Math.round(v * 10) / 10 })}
+          />
+
           <View style={styles.derivedTable}>
             {[
               { label: t("settings.derived.unit"), value: `${unitMs} ms` },
@@ -167,10 +186,11 @@ type SliderRowProps = {
   unitMin: string;
   unitMax: string;
   rowKey: string;
+  keyGroup?: string;
   openKey: string | null;
   onOpenKeyChange: (key: string | null) => void;
   onChange: (value: number) => void;
-  onTry: () => void;
+  onTry?: () => void;
 };
 
 function SliderRow({
@@ -183,18 +203,20 @@ function SliderRow({
   unitMin,
   unitMax,
   rowKey,
+  keyGroup = "audio",
   openKey,
   onOpenKeyChange,
   onChange,
   onTry,
 }: SliderRowProps) {
   const { t } = useLocale();
-  const isOpen = openKey === `audio:${rowKey}`;
+  const fullKey = `${keyGroup}:${rowKey}`;
+  const isOpen = openKey === fullKey;
   return (
     <View style={styles.rowWrap}>
       <TouchableOpacity
         style={[styles.row, isOpen && styles.rowOpen]}
-        onPress={() => onOpenKeyChange(isOpen ? null : `audio:${rowKey}`)}
+        onPress={() => onOpenKeyChange(isOpen ? null : fullKey)}
         accessibilityRole="button"
       >
         <Text style={styles.rowLabel}>{label}</Text>
@@ -220,9 +242,11 @@ function SliderRow({
             <Text style={styles.sliderMetaText}>{unitMax}</Text>
           </View>
 
-          <TouchableOpacity style={styles.tryBtn} onPress={onTry}>
-            <Text style={styles.tryBtnText}>{"▶ "}{t("common.try")}</Text>
-          </TouchableOpacity>
+          {onTry && (
+            <TouchableOpacity style={styles.tryBtn} onPress={onTry}>
+              <Text style={styles.tryBtnText}>{"▶ "}{t("common.try")}</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </View>

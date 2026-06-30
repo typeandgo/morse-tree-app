@@ -31,6 +31,7 @@ export type Messages = {
     usageCooldown: string;
     treeTitle: string;
     treeText: string;
+    treeNote: string;
   };
   settings: {
     title: string;
@@ -50,6 +51,10 @@ export type Messages = {
       dash: string;
       gap: string;
       cooldown: string;
+    };
+    gapMultiplier: {
+      label: string;
+      format: string;
     };
     sound: {
       previewDot: string;

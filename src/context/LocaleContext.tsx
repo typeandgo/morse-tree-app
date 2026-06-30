@@ -9,7 +9,6 @@ import {
   type ReactNode,
 } from "react";
 import {
-  DEFAULT_LOCALE,
   LOCALE_STORAGE_KEY,
   translate,
   type Locale,
@@ -23,14 +22,25 @@ type LocaleContextValue = {
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
+function getDeviceLocale(): Locale {
+  try {
+    const tag = Intl.DateTimeFormat().resolvedOptions().locale;
+    return tag.startsWith("tr") ? "tr" : "en";
+  } catch {
+    return "en";
+  }
+}
+
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
+  const [locale, setLocaleState] = useState<Locale>("en");
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(LOCALE_STORAGE_KEY).then((raw) => {
       if (raw === "tr" || raw === "en") {
         setLocaleState(raw);
+      } else {
+        setLocaleState(getDeviceLocale());
       }
       setLoaded(true);
     });

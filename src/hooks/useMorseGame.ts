@@ -11,6 +11,8 @@ import {
 import { startPressTone, stopPressTone } from "@/lib/morse-audio";
 import { pressDurationToSymbol, symbolToChar } from "@/lib/morse-timing";
 import {
+  getDashMax,
+  getDotMax,
   getDurationBetweenQueue,
   getDurationEndOfQueue,
   getPathStepMs,
@@ -44,6 +46,7 @@ export function useMorseGame() {
   const betweenQueueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const endOfQueueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const animationTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const dashAutoReleaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const syncQueueRef = useCallback((next: CodeType[]) => {
     queueRef.current = next;
@@ -74,6 +77,13 @@ export function useMorseGame() {
     }
   }, []);
 
+  const clearDashAutoRelease = useCallback(() => {
+    if (dashAutoReleaseTimerRef.current) {
+      clearTimeout(dashAutoReleaseTimerRef.current);
+      dashAutoReleaseTimerRef.current = null;
+    }
+  }, []);
+
   const resetVisualState = useCallback(() => {
     clearAnimationTimers();
     currentSegmentsRef.current = [];
@@ -86,11 +96,12 @@ export function useMorseGame() {
   const fullReset = useCallback(() => {
     clearBetweenQueueTimer();
     clearEndOfQueueTimer();
+    clearDashAutoRelease();
     resetVisualState();
     syncQueueRef([]);
     setIsDisabled(false);
     setPhaseSafe("idle");
-  }, [clearBetweenQueueTimer, clearEndOfQueueTimer, resetVisualState, setPhaseSafe, syncQueueRef]);
+  }, [clearBetweenQueueTimer, clearDashAutoRelease, clearEndOfQueueTimer, resetVisualState, setPhaseSafe, syncQueueRef]);
 
   const applySegmentsUpTo = useCallback(
     (segments: PathSegment[], count: number, withFinal: string | null) => {
@@ -240,6 +251,25 @@ export function useMorseGame() {
     ],
   );
 
+  // Core press-end logic shared by manual release and auto-release.
+  const triggerPressEnd = useCallback(() => {
+    if (!isPressingRef.current || pressStartRef.current === null) return;
+    isPressingRef.current = false;
+    clearDashAutoRelease();
+
+    const elapsed = Date.now() - pressStartRef.current;
+    pressStartRef.current = null;
+
+    if (isDisabled || phaseRef.current === "completing" || phaseRef.current === "cooldown") {
+      stopPressTone(0);
+      return;
+    }
+
+    stopPressTone(Math.max(0, getDotMax(settings) - elapsed));
+    const symbol = pressDurationToSymbol(elapsed, settings);
+    handleSymbolInput(symbol);
+  }, [clearDashAutoRelease, handleSymbolInput, isDisabled, settings]);
+
   const onPressStart = useCallback(() => {
     if (isDisabled || phaseRef.current === "completing" || phaseRef.current === "cooldown") {
       return;
@@ -248,31 +278,26 @@ export function useMorseGame() {
     startPressTone(audioSettings);
     isPressingRef.current = true;
     pressStartRef.current = Date.now();
-  }, [audioSettings, isDisabled]);
+
+    // Auto-release when press reaches dash max duration
+    dashAutoReleaseTimerRef.current = setTimeout(() => {
+      dashAutoReleaseTimerRef.current = null;
+      triggerPressEnd();
+    }, getDashMax(settings));
+  }, [audioSettings, isDisabled, settings, triggerPressEnd]);
 
   const onPressEnd = useCallback(() => {
-    if (!isPressingRef.current || pressStartRef.current === null) return;
-    isPressingRef.current = false;
-    stopPressTone();
-
-    if (isDisabled || phaseRef.current === "completing" || phaseRef.current === "cooldown") {
-      pressStartRef.current = null;
-      return;
-    }
-
-    const duration = Date.now() - pressStartRef.current;
-    pressStartRef.current = null;
-    const symbol = pressDurationToSymbol(duration, settings);
-    handleSymbolInput(symbol);
-  }, [handleSymbolInput, isDisabled, settings]);
+    triggerPressEnd();
+  }, [triggerPressEnd]);
 
   useEffect(() => {
     return () => {
       clearBetweenQueueTimer();
       clearEndOfQueueTimer();
       clearAnimationTimers();
+      clearDashAutoRelease();
     };
-  }, [clearAnimationTimers, clearBetweenQueueTimer, clearEndOfQueueTimer]);
+  }, [clearAnimationTimers, clearBetweenQueueTimer, clearDashAutoRelease, clearEndOfQueueTimer]);
 
   return {
     phase,

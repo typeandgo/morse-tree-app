@@ -3,18 +3,25 @@ export const WPM_MAX = 25;
 export const WPM_DEFAULT = 10;
 export const WPM_STEP = 1;
 
+export const GAP_MULTIPLIER_MIN = 1;
+export const GAP_MULTIPLIER_MAX = 2;
+export const GAP_MULTIPLIER_DEFAULT = 1;
+export const GAP_MULTIPLIER_STEP = 0.1;
+
 export type MorseSettings = {
   wpm: number;
+  gapMultiplier: number;
 };
 
 export const DEFAULT_MORSE_SETTINGS: MorseSettings = {
   wpm: WPM_DEFAULT,
+  gapMultiplier: GAP_MULTIPLIER_DEFAULT,
 };
 
 export const SETTINGS_STORAGE_KEY = "morse-tree-settings";
 
 export function getUnitMs(settings: MorseSettings): number {
-  return Math.round(1200 / settings.wpm);
+  return Math.round(1200 / settings.wpm) * 2;
 }
 
 export function getDotMax(settings: MorseSettings): number {
@@ -30,7 +37,7 @@ export function getDashMax(settings: MorseSettings): number {
 }
 
 export function getDurationBetweenQueue(settings: MorseSettings): number {
-  return Math.round(getUnitMs(settings) * 7);
+  return Math.round(getUnitMs(settings) * 7 * settings.gapMultiplier);
 }
 
 export function getDurationEndOfQueue(): number {
@@ -47,6 +54,7 @@ export function normalizeMorseSettings(
   const base = { ...DEFAULT_MORSE_SETTINGS, ...partial };
   return {
     wpm: clamp(Math.round(base.wpm), WPM_MIN, WPM_MAX),
+    gapMultiplier: Math.round(clamp(base.gapMultiplier, GAP_MULTIPLIER_MIN, GAP_MULTIPLIER_MAX) * 10) / 10,
   };
 }
 

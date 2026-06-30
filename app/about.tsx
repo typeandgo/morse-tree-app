@@ -55,8 +55,9 @@ export default function AboutScreen() {
 
         <View style={styles.section}>
           <Text style={styles.heading}>{t("about.treeTitle")}</Text>
-          <Text style={styles.text}>
-            {t("about.treeText", { settings: settingsLabel })}
+          <Text style={styles.text}>{t("about.treeText")}</Text>
+          <Text style={styles.treeNote}>
+            {`* ${t("about.treeNote", { settings: settingsLabel })}`}
           </Text>
         </View>
       </ScrollView>
@@ -125,5 +126,12 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: THEME.gold,
     opacity: 0.9,
+  },
+  treeNote: {
+    fontSize: 14,
+    lineHeight: 22,
+    color: THEME.gold,
+    opacity: 0.7,
+    marginTop: 12,
   },
 });

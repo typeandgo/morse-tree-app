@@ -32,7 +32,8 @@ export const en: Messages = {
     usageQueueGap: "Leaving more than {duration} ms between presses completes the queue",
     usageCooldown: "After the queue completes, the button stays disabled for {duration} ms",
     treeTitle: "Tree structure",
-    treeText: "Each letter is defined by dot and dash branches from the antenna (root). When you enter the correct morse sequence, nodes and lines along the path light up and the correct letter stays highlighted. Change speed on the {settings} page; values on this page always reflect your latest settings.",
+    treeText: "Each letter is defined by dot and dash branches from the antenna (root). When you enter the correct morse sequence, nodes and lines along the path light up and the correct letter stays highlighted.",
+    treeNote: "Change speed on the {settings} page; values on this page always reflect your latest settings.",
   },
   settings: {
     title: "Settings",
@@ -52,6 +53,10 @@ export const en: Messages = {
       dash: "DASH range",
       gap: "Symbol gap",
       cooldown: "Cooldown",
+    },
+    gapMultiplier: {
+      label: "Gap Multiplier",
+      format: "×{value}",
     },
     sound: {
       previewDot: "Preview {dot}",

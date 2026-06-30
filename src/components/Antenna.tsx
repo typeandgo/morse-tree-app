@@ -9,9 +9,10 @@ export default function Antenna() {
   return (
     <View style={styles.antenna}>
       {/* Triangle outer */}
-      <View style={styles.triangleOuter} />
+      <View style={[styles.triangleOuter,
+          antennaActive && styles.triangleOuterGlow,]} />
       {/* Triangle inner cutout (card-bg color overlay) */}
-      <View style={styles.triangleInner} />
+      <View style={[styles.triangleInner]} />
       {/* Pole */}
       <View
         style={[
@@ -44,6 +45,9 @@ const styles = StyleSheet.create({
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
     borderTopColor: THEME.gold,
+  },
+  triangleOuterGlow: {
+    borderTopColor: THEME.activeColor,
   },
   triangleInner: {
     position: "absolute",
