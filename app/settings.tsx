@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Header from "@/components/Header";
 import { useLocale } from "@/context/LocaleContext";
 import { useSettings } from "@/context/SettingsContext";
-import { playDashSound, playDotSound } from "@/lib/morse-audio";
+import { PREVIEW_DURATION_MULTIPLIER, playDashSound, playDotSound } from "@/lib/morse-audio";
 import {
   WPM_MIN,
   WPM_MAX,
@@ -49,8 +49,8 @@ export default function SettingsScreen() {
   const endOfQueue = getDurationEndOfQueue();
 
   const preview = (type: "dot" | "dash") => {
-    if (type === "dot") void playDotSound(audioSettings);
-    else void playDashSound(audioSettings);
+    if (type === "dot") void playDotSound(audioSettings, PREVIEW_DURATION_MULTIPLIER);
+    else void playDashSound(audioSettings, PREVIEW_DURATION_MULTIPLIER);
   };
 
   const dot = t("common.dot");

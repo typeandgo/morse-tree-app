@@ -14,6 +14,9 @@ const SAMPLE_RATE = 44100;
 const AUDIO_VOLUME = 1.0;
 // Long enough to cover any press at minimum WPM (WPM=1 → dash ≈ 3600ms)
 const PRESS_TONE_DURATION_MS = 5000;
+// Settings screen "listen" buttons play longer than a real dot/dash so the
+// tone is easier to hear while previewing.
+export const PREVIEW_DURATION_MULTIPLIER = 2;
 
 // Promise-lock: all concurrent callers await the same in-flight init,
 // preventing duplicate setAudioModeAsync calls that can silently drop
@@ -120,6 +123,11 @@ export async function prepareAudio(audio: MorseAudioSettings): Promise<void> {
   await ensureAudioMode();
   getOrCreateToneUri({ frequencyHz: audio.frequencyHz, durationMs: AUDIO_UNIT_MS });
   getOrCreateToneUri({ frequencyHz: audio.frequencyHz, durationMs: AUDIO_UNIT_MS * AUDIO_DASH_RATIO });
+  getOrCreateToneUri({ frequencyHz: audio.frequencyHz, durationMs: AUDIO_UNIT_MS * PREVIEW_DURATION_MULTIPLIER });
+  getOrCreateToneUri({
+    frequencyHz: audio.frequencyHz,
+    durationMs: AUDIO_UNIT_MS * AUDIO_DASH_RATIO * PREVIEW_DURATION_MULTIPLIER,
+  });
 
   // Recreate press player whenever audio settings change (e.g. frequency)
   if (pressTonePlayer) {
@@ -204,14 +212,19 @@ async function playTone(opts: {
 
 export async function playDotSound(
   audio: MorseAudioSettings = DEFAULT_MORSE_AUDIO_SETTINGS,
+  durationMultiplier = 1,
 ): Promise<void> {
-  await playTone({ frequencyHz: audio.frequencyHz, durationMs: AUDIO_UNIT_MS });
+  await playTone({ frequencyHz: audio.frequencyHz, durationMs: AUDIO_UNIT_MS * durationMultiplier });
 }
 
 export async function playDashSound(
   audio: MorseAudioSettings = DEFAULT_MORSE_AUDIO_SETTINGS,
+  durationMultiplier = 1,
 ): Promise<void> {
-  await playTone({ frequencyHz: audio.frequencyHz, durationMs: AUDIO_UNIT_MS * AUDIO_DASH_RATIO });
+  await playTone({
+    frequencyHz: audio.frequencyHz,
+    durationMs: AUDIO_UNIT_MS * AUDIO_DASH_RATIO * durationMultiplier,
+  });
 }
 
 export async function playMorseSymbolSound(

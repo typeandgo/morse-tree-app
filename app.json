@@ -12,7 +12,8 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.enginozturk.morsetree",
       "infoPlist": {
-        "UIBackgroundModes": []
+        "UIBackgroundModes": [],
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {

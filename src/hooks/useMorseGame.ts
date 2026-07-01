@@ -16,13 +16,17 @@ import {
   getDurationBetweenQueue,
   getDurationEndOfQueue,
   getPathStepMs,
+  type MorseSettings,
 } from "@/lib/morse-settings";
 
 type Phase = "idle" | "typing" | "completing" | "cooldown";
 
 // Ghost touch filter: native touch events shorter than this are discarded.
-// Intentional taps are always longer; ghost touches are typically < 10ms.
-const MIN_PRESS_DURATION_MS = 20;
+// Scales inversely with WPM (50ms at 10 WPM) so faster senders' short
+// intentional taps aren't mistaken for ghost touches.
+function getMinPressDurationMs(settings: MorseSettings): number {
+  return 500 / settings.wpm;
+}
 
 function segmentsEqual(a: PathSegment, b: PathSegment): boolean {
   if (a.type !== b.type) return false;
@@ -266,7 +270,7 @@ export function useMorseGame() {
 
     // Ghost touch: discard sub-threshold presses without registering a symbol.
     // Real human taps are always longer; ghost touches are typically < 10ms.
-    if (elapsed < MIN_PRESS_DURATION_MS) {
+    if (elapsed < getMinPressDurationMs(settings)) {
       stopPressTone(0);
       return;
     }
