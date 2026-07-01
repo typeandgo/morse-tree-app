@@ -5,6 +5,7 @@ import {
   buildPathSegments,
   findByMorseCode,
   isLeafAlphabetKey,
+  MAX_SYMBOL_QUEUE_LENGTH,
   segmentsToActiveSets,
   type PathSegment,
 } from "@/lib/morse-mappings";
@@ -45,6 +46,16 @@ export function useMorseGame() {
   const [antennaActive, setAntennaActive] = useState(false);
   const [finalNodeId, setFinalNodeId] = useState<string | null>(null);
   const [isDisabled, setIsDisabled] = useState(false);
+
+  // Synchronous mirror of `isDisabled`: React state updates are batched/async,
+  // so a rapid press landing right after setIsDisabled(true) can still see the
+  // stale `false` closure value. Guards that must reject same-tick input read
+  // this ref instead.
+  const isDisabledRef = useRef(false);
+  const setDisabledSafe = useCallback((next: boolean) => {
+    isDisabledRef.current = next;
+    setIsDisabled(next);
+  }, []);
 
   const pressStartRef = useRef<number | null>(null);
   const isPressingRef = useRef(false);
@@ -117,11 +128,11 @@ export function useMorseGame() {
     clearDashDetectTimer();
     resetVisualState();
     syncQueueRef([]);
-    setIsDisabled(false);
+    setDisabledSafe(false);
     setPhaseSafe("idle");
   }, [
     clearBetweenQueueTimer, clearDashAutoRelease, clearDashDetectTimer,
-    clearEndOfQueueTimer, resetVisualState, setPhaseSafe, syncQueueRef,
+    clearEndOfQueueTimer, resetVisualState, setDisabledSafe, setPhaseSafe, syncQueueRef,
   ]);
 
   const applySegmentsUpTo = useCallback(
@@ -211,7 +222,7 @@ export function useMorseGame() {
     clearBetweenQueueTimer();
     clearAnimationTimers();
     setPhaseSafe("completing");
-    setIsDisabled(true);
+    setDisabledSafe(true);
 
     const symbols = queueRef.current;
     const exactMatch = getMatchForQueue(symbols);
@@ -238,7 +249,7 @@ export function useMorseGame() {
     runCooldown();
   }, [
     applyPathImmediate, clearAnimationTimers, clearBetweenQueueTimer,
-    fullReset, getLastValidMatch, getMatchForQueue, setPhaseSafe,
+    fullReset, getLastValidMatch, getMatchForQueue, setDisabledSafe, setPhaseSafe,
   ]);
 
   const scheduleQueueCompletion = useCallback(() => {
@@ -250,7 +261,12 @@ export function useMorseGame() {
 
   const handleSymbolInput = useCallback(
     (symbol: CodeType) => {
-      if (isDisabled || phaseRef.current === "completing" || phaseRef.current === "cooldown") {
+      if (
+        isDisabledRef.current ||
+        phaseRef.current === "completing" ||
+        phaseRef.current === "cooldown" ||
+        queueRef.current.length >= MAX_SYMBOL_QUEUE_LENGTH
+      ) {
         return;
       }
 
@@ -272,7 +288,7 @@ export function useMorseGame() {
       scheduleQueueCompletion();
     },
     [
-      animatePathIncremental, completeQueue, getMatchForQueue, isDisabled,
+      animatePathIncremental, completeQueue, getMatchForQueue,
       scheduleQueueCompletion, setPhaseSafe, syncQueueRef,
     ],
   );
@@ -303,7 +319,7 @@ export function useMorseGame() {
       return;
     }
 
-    if (isDisabled || phaseRef.current === "completing" || phaseRef.current === "cooldown") {
+    if (isDisabledRef.current || phaseRef.current === "completing" || phaseRef.current === "cooldown") {
       stopPressTone(0);
       return;
     }
@@ -311,10 +327,15 @@ export function useMorseGame() {
     stopPressTone(Math.max(0, getDotMax(settings) - elapsed));
     const symbol = pressDurationToSymbol(elapsed, settings);
     handleSymbolInput(symbol);
-  }, [clearDashAutoRelease, clearDashDetectTimer, handleSymbolInput, isDisabled, settings]);
+  }, [clearDashAutoRelease, clearDashDetectTimer, handleSymbolInput, settings]);
 
   const onPressStart = useCallback(() => {
-    if (isDisabled || phaseRef.current === "completing" || phaseRef.current === "cooldown") {
+    if (
+      isDisabledRef.current ||
+      phaseRef.current === "completing" ||
+      phaseRef.current === "cooldown" ||
+      queueRef.current.length >= MAX_SYMBOL_QUEUE_LENGTH
+    ) {
       return;
     }
     if (isPressingRef.current) return;
@@ -341,7 +362,7 @@ export function useMorseGame() {
       dashAutoReleaseTimerRef.current = null;
       triggerPressEnd();
     }, getDashMax(settings));
-  }, [audioSettings, clearBetweenQueueTimer, handleSymbolInput, isDisabled, settings, triggerPressEnd]);
+  }, [audioSettings, clearBetweenQueueTimer, handleSymbolInput, settings, triggerPressEnd]);
 
   const onPressEnd = useCallback(() => {
     triggerPressEnd();

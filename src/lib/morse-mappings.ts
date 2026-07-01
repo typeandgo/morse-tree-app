@@ -36,6 +36,13 @@ export function findByMorseCode(code: string): {
   return MORSE_CODE_MAP.get(code) ?? null;
 }
 
+// No entry's morse code is longer than this, so once a queue reaches this
+// length it can never match anything further — additional presses must be
+// rejected rather than appended.
+export const MAX_SYMBOL_QUEUE_LENGTH = Math.max(
+  ...Array.from(MORSE_CODE_MAP.keys()).map((code) => code.length),
+);
+
 export type PathSegment =
   | { type: "antenna" }
   | { type: "line"; lineId: string }
