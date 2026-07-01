@@ -42,7 +42,7 @@ export default function KeyButton() {
 const styles = StyleSheet.create({
   keyButton: {
     position: "absolute",
-    bottom: 20,
+    bottom: 60,
     left: "50%",
     transform: [{ translateX: -36 }],
     alignItems: "center",

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CODE_TYPES, type CodeType } from "@/constants/main.constants";
 import { useSettings } from "@/context/SettingsContext";
 import {
@@ -194,6 +194,11 @@ export function useMorseGame() {
     return findByMorseCode(code);
   }, []);
 
+  const previewLetter = useMemo(() => {
+    const match = getMatchForQueue(queue);
+    return match ? match.entry.key : null;
+  }, [getMatchForQueue, queue]);
+
   const getLastValidMatch = useCallback((symbols: CodeType[]) => {
     for (let len = symbols.length; len > 0; len -= 1) {
       const match = getMatchForQueue(symbols.slice(0, len));
@@ -355,6 +360,7 @@ export function useMorseGame() {
   return {
     phase,
     queue,
+    previewLetter,
     activeNodeIds,
     activeLineIds,
     antennaActive,

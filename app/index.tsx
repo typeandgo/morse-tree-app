@@ -1,6 +1,7 @@
 import { Dimensions, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Antenna from "@/components/Antenna";
+import CodePreview from "@/components/CodePreview";
 import Header from "@/components/Header";
 import KeyButton from "@/components/KeyButton";
 import Lines from "@/components/Lines";
@@ -22,6 +23,7 @@ export default function HomeScreen() {
     <View style={[styles.page, { paddingTop: insets.top }]}>
       <MorseGameProvider>
         <Header />
+        <CodePreview />
         <View style={styles.canvasContainer}>
           <View
             style={[
@@ -55,7 +57,6 @@ const styles = StyleSheet.create({
     width: DEVICE_W,
     height: scaledH,
     overflow: "hidden",
-    marginTop: 60,
   },
   canvas: {
     width: CANVAS_W,
