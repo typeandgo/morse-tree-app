@@ -232,7 +232,7 @@ export function useMorseGame() {
       setPhaseSafe("cooldown");
       endOfQueueTimerRef.current = setTimeout(() => {
         fullReset();
-      }, getDurationEndOfQueue());
+      }, getDurationEndOfQueue(settings));
     };
 
     if (exactMatch) {
@@ -249,7 +249,7 @@ export function useMorseGame() {
     runCooldown();
   }, [
     applyPathImmediate, clearAnimationTimers, clearBetweenQueueTimer,
-    fullReset, getLastValidMatch, getMatchForQueue, setDisabledSafe, setPhaseSafe,
+    fullReset, getLastValidMatch, getMatchForQueue, setDisabledSafe, setPhaseSafe, settings,
   ]);
 
   const scheduleQueueCompletion = useCallback(() => {

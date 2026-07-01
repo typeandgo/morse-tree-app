@@ -9,6 +9,7 @@
 These values intentionally differ from the master project and must NOT be overwritten when porting:
 
 - `WPM_MIN = 1`, `WPM_MAX = 25` (Next uses 10–40; app targets slower learners)
+- `endOfQueueDuration` (cooldown after queue completes) is a user-adjustable setting in `MorseSettings` here (500–2000ms, 100ms step, default 1000ms, via a settings slider), not a hardcoded `getDurationEndOfQueue()` constant. This was added app-only per explicit user request; do not overwrite with the Next version when porting `morse-settings.ts`.
 
 ## What flows from Next → App
 

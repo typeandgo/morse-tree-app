@@ -8,14 +8,21 @@ export const GAP_MULTIPLIER_MAX = 2;
 export const GAP_MULTIPLIER_DEFAULT = 1;
 export const GAP_MULTIPLIER_STEP = 0.1;
 
+export const END_OF_QUEUE_DURATION_MIN = 500;
+export const END_OF_QUEUE_DURATION_MAX = 2000;
+export const END_OF_QUEUE_DURATION_DEFAULT = 1000;
+export const END_OF_QUEUE_DURATION_STEP = 100;
+
 export type MorseSettings = {
   wpm: number;
   gapMultiplier: number;
+  endOfQueueDuration: number;
 };
 
 export const DEFAULT_MORSE_SETTINGS: MorseSettings = {
   wpm: WPM_DEFAULT,
   gapMultiplier: GAP_MULTIPLIER_DEFAULT,
+  endOfQueueDuration: END_OF_QUEUE_DURATION_DEFAULT,
 };
 
 export const SETTINGS_STORAGE_KEY = "morse-tree-settings";
@@ -40,8 +47,8 @@ export function getDurationBetweenQueue(settings: MorseSettings): number {
   return Math.round(getUnitMs(settings) * 3 * settings.gapMultiplier);
 }
 
-export function getDurationEndOfQueue(): number {
-  return 500;
+export function getDurationEndOfQueue(settings: MorseSettings): number {
+  return settings.endOfQueueDuration;
 }
 
 export function getPathStepMs(settings: MorseSettings): number {
@@ -55,6 +62,9 @@ export function normalizeMorseSettings(
   return {
     wpm: clamp(Math.round(base.wpm), WPM_MIN, WPM_MAX),
     gapMultiplier: Math.round(clamp(base.gapMultiplier, GAP_MULTIPLIER_MIN, GAP_MULTIPLIER_MAX) * 10) / 10,
+    endOfQueueDuration:
+      Math.round(clamp(base.endOfQueueDuration, END_OF_QUEUE_DURATION_MIN, END_OF_QUEUE_DURATION_MAX) / END_OF_QUEUE_DURATION_STEP) *
+      END_OF_QUEUE_DURATION_STEP,
   };
 }
 

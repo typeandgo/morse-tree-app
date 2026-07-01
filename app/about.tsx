@@ -2,26 +2,12 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Header from "@/components/Header";
 import { useLocale } from "@/context/LocaleContext";
-import { useSettings } from "@/context/SettingsContext";
-import {
-  getDotMax,
-  getDashMin,
-  getDashMax,
-  getDurationBetweenQueue,
-  getDurationEndOfQueue,
-} from "@/lib/morse-settings";
 import { THEME } from "@/constants/theme";
 
 export default function AboutScreen() {
   const { t } = useLocale();
-  const { settings } = useSettings();
   const insets = useSafeAreaInsets();
 
-  const dotMax = getDotMax(settings);
-  const dashMin = getDashMin(settings);
-  const dashMax = getDashMax(settings);
-  const durationBetweenQueue = getDurationBetweenQueue(settings);
-  const durationEndOfQueue = getDurationEndOfQueue();
   const push = t("common.push");
   const dot = t("common.dot");
   const dash = t("common.dash");
@@ -40,11 +26,10 @@ export default function AboutScreen() {
         <View style={styles.section}>
           <Text style={styles.heading}>{t("about.howToTitle")}</Text>
           {[
-            t("about.usageShort", { push, dotMax, dot }),
-            t("about.usageLong", { push, dashMin, dashMax, dash }),
-            t("about.usageQueueWait", { duration: durationBetweenQueue }),
-            t("about.usageQueueGap", { duration: durationBetweenQueue }),
-            t("about.usageCooldown", { duration: durationEndOfQueue }),
+            t("about.usageShort", { push, dot }),
+            t("about.usageLong", { push, dash }),
+            t("about.usageQueue"),
+            t("about.usageCooldown"),
           ].map((item, i) => (
             <View key={i} style={styles.listItem}>
               <Text style={styles.bullet}>{"•"}</Text>

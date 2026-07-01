@@ -26,8 +26,7 @@ export type Messages = {
     howToTitle: string;
     usageShort: string;
     usageLong: string;
-    usageQueueWait: string;
-    usageQueueGap: string;
+    usageQueue: string;
     usageCooldown: string;
     treeTitle: string;
     treeText: string;
@@ -50,9 +49,12 @@ export type Messages = {
       dot: string;
       dash: string;
       gap: string;
-      cooldown: string;
     };
     gapMultiplier: {
+      label: string;
+      format: string;
+    };
+    endOfQueueDuration: {
       label: string;
       format: string;
     };

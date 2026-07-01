@@ -19,12 +19,14 @@ import {
   GAP_MULTIPLIER_MIN,
   GAP_MULTIPLIER_MAX,
   GAP_MULTIPLIER_STEP,
+  END_OF_QUEUE_DURATION_MIN,
+  END_OF_QUEUE_DURATION_MAX,
+  END_OF_QUEUE_DURATION_STEP,
   getUnitMs,
   getDotMax,
   getDashMin,
   getDashMax,
   getDurationBetweenQueue,
-  getDurationEndOfQueue,
 } from "@/lib/morse-settings";
 import { THEME } from "@/constants/theme";
 
@@ -46,7 +48,6 @@ export default function SettingsScreen() {
   const dashMin = getDashMin(settings);
   const dashMax = getDashMax(settings);
   const betweenQueue = getDurationBetweenQueue(settings);
-  const endOfQueue = getDurationEndOfQueue();
 
   const preview = (type: "dot" | "dash") => {
     if (type === "dot") void playDotSound(audioSettings, PREVIEW_DURATION_MULTIPLIER);
@@ -111,13 +112,28 @@ export default function SettingsScreen() {
             onChange={(v) => updateSettings({ gapMultiplier: Math.round(v * 10) / 10 })}
           />
 
+          <SliderRow
+            label={t("settings.endOfQueueDuration.label")}
+            value={settings.endOfQueueDuration}
+            displayValue={t("settings.endOfQueueDuration.format", { value: settings.endOfQueueDuration })}
+            min={END_OF_QUEUE_DURATION_MIN}
+            max={END_OF_QUEUE_DURATION_MAX}
+            step={END_OF_QUEUE_DURATION_STEP}
+            unitMin={`${END_OF_QUEUE_DURATION_MIN} ms`}
+            unitMax={`${END_OF_QUEUE_DURATION_MAX} ms`}
+            rowKey="endOfQueueDuration"
+            keyGroup="timing"
+            openKey={openKey}
+            onOpenKeyChange={setOpenKey}
+            onChange={(v) => updateSettings({ endOfQueueDuration: Math.round(v / 100) * 100 })}
+          />
+
           <View style={styles.derivedTable}>
             {[
               { label: t("settings.derived.unit"), value: `${unitMs} ms` },
               { label: t("settings.derived.dot"), value: `0–${dotMax} ms` },
               { label: t("settings.derived.dash"), value: `${dashMin}–${dashMax} ms` },
               { label: t("settings.derived.gap"), value: `${betweenQueue} ms` },
-              { label: t("settings.derived.cooldown"), value: `${endOfQueue} ms` },
             ].map(({ label, value }) => (
               <View key={label} style={styles.derivedRow}>
                 <Text style={styles.derivedLabel}>{label}</Text>
