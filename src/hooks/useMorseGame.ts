@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { CodeType } from "@/constants/main.constants";
+import { CODE_TYPES, type CodeType } from "@/constants/main.constants";
 import { useSettings } from "@/context/SettingsContext";
 import {
   buildPathSegments,
@@ -55,6 +55,8 @@ export function useMorseGame() {
   const endOfQueueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const animationTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const dashAutoReleaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dashDetectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dashDetectedRef = useRef(false);
 
   const syncQueueRef = useCallback((next: CodeType[]) => {
     queueRef.current = next;
@@ -92,6 +94,13 @@ export function useMorseGame() {
     }
   }, []);
 
+  const clearDashDetectTimer = useCallback(() => {
+    if (dashDetectTimerRef.current) {
+      clearTimeout(dashDetectTimerRef.current);
+      dashDetectTimerRef.current = null;
+    }
+  }, []);
+
   const resetVisualState = useCallback(() => {
     clearAnimationTimers();
     currentSegmentsRef.current = [];
@@ -105,11 +114,15 @@ export function useMorseGame() {
     clearBetweenQueueTimer();
     clearEndOfQueueTimer();
     clearDashAutoRelease();
+    clearDashDetectTimer();
     resetVisualState();
     syncQueueRef([]);
     setIsDisabled(false);
     setPhaseSafe("idle");
-  }, [clearBetweenQueueTimer, clearDashAutoRelease, clearEndOfQueueTimer, resetVisualState, setPhaseSafe, syncQueueRef]);
+  }, [
+    clearBetweenQueueTimer, clearDashAutoRelease, clearDashDetectTimer,
+    clearEndOfQueueTimer, resetVisualState, setPhaseSafe, syncQueueRef,
+  ]);
 
   const applySegmentsUpTo = useCallback(
     (segments: PathSegment[], count: number, withFinal: string | null) => {
@@ -264,9 +277,19 @@ export function useMorseGame() {
     if (!isPressingRef.current || pressStartRef.current === null) return;
     isPressingRef.current = false;
     clearDashAutoRelease();
+    clearDashDetectTimer();
 
     const elapsed = Date.now() - pressStartRef.current;
     pressStartRef.current = null;
+
+    // Symbol was already committed early once the press crossed the dot
+    // threshold (see dashDetectTimerRef below) — this release is just the
+    // physical finger lifting, so only stop the tone and clean up.
+    if (dashDetectedRef.current) {
+      dashDetectedRef.current = false;
+      stopPressTone(0);
+      return;
+    }
 
     // Ghost touch: discard sub-threshold presses without registering a symbol.
     // Real human taps are always longer; ghost touches are typically < 10ms.
@@ -283,7 +306,7 @@ export function useMorseGame() {
     stopPressTone(Math.max(0, getDotMax(settings) - elapsed));
     const symbol = pressDurationToSymbol(elapsed, settings);
     handleSymbolInput(symbol);
-  }, [clearDashAutoRelease, handleSymbolInput, isDisabled, settings]);
+  }, [clearDashAutoRelease, clearDashDetectTimer, handleSymbolInput, isDisabled, settings]);
 
   const onPressStart = useCallback(() => {
     if (isDisabled || phaseRef.current === "completing" || phaseRef.current === "cooldown") {
@@ -294,13 +317,26 @@ export function useMorseGame() {
     startPressTone(audioSettings);
     isPressingRef.current = true;
     pressStartRef.current = Date.now();
+    dashDetectedRef.current = false;
 
-    // Auto-release when press reaches dash max duration
+    // The instant the hold crosses the dot threshold, the symbol is
+    // guaranteed to resolve as a dash — commit it and light the path now
+    // instead of waiting for the finger to actually lift. The press tone
+    // keeps playing until the real release.
+    dashDetectTimerRef.current = setTimeout(() => {
+      dashDetectTimerRef.current = null;
+      if (!isPressingRef.current) return;
+      dashDetectedRef.current = true;
+      handleSymbolInput(CODE_TYPES.DASH);
+    }, getDotMax(settings) + 1);
+
+    // Safety fallback: force a real release if the physical press somehow
+    // never ends (e.g. stuck touch) once it reaches dash max duration.
     dashAutoReleaseTimerRef.current = setTimeout(() => {
       dashAutoReleaseTimerRef.current = null;
       triggerPressEnd();
     }, getDashMax(settings));
-  }, [audioSettings, clearBetweenQueueTimer, isDisabled, settings, triggerPressEnd]);
+  }, [audioSettings, clearBetweenQueueTimer, handleSymbolInput, isDisabled, settings, triggerPressEnd]);
 
   const onPressEnd = useCallback(() => {
     triggerPressEnd();
@@ -312,8 +348,9 @@ export function useMorseGame() {
       clearEndOfQueueTimer();
       clearAnimationTimers();
       clearDashAutoRelease();
+      clearDashDetectTimer();
     };
-  }, [clearAnimationTimers, clearBetweenQueueTimer, clearDashAutoRelease, clearEndOfQueueTimer]);
+  }, [clearAnimationTimers, clearBetweenQueueTimer, clearDashAutoRelease, clearDashDetectTimer, clearEndOfQueueTimer]);
 
   return {
     phase,
